@@ -273,6 +273,33 @@ def list_history():
                            })
 
 
+@app.route("/rmap/history2")
+@cross_origin(headers=['Content-Type'])
+def list_history2():
+    try:
+        query_result = g.db.reportmap.find()
+
+        result = [[str(item['_id']),
+                   item['timestamp']
+                   ]
+                  for item in query_result]
+
+        item_total = g.db.reportmap.count()
+
+        return json.dumps({"data": result,
+                           "queryRecordCount": len(result),
+                           "totalRecordCount": item_total
+                           })
+
+    except Exception as e:
+        return json.dumps({"data": ["Errore dal server",
+                                    e.message
+                                    ],
+                           "queryRecordCount": 1,
+                           "totalRecordCount": 1
+                           })
+
+
 @app.route("/rmap/history/<version>")
 @cross_origin(headers=['Content-Type'])
 def get_history(version):
