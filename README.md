@@ -4,6 +4,9 @@ agenzia-entrate-proxy-map
 Questo repository contiene il backend che serve la mappa di
 http://agenziauscite.openstreetmap.it
 
+Il repository con il frontend si trova su GitHub anch'esso:
+[qui](https://github.com/osmItalia/agenziauscite.openstreetmap.it).
+
 Contesto
 -------------------------
 Ho appena twittato questo:
