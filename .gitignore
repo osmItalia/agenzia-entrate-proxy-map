@@ -1,2 +1,2 @@
-reportmap/mailgun_conf.json
-reportmap/recaptcha_conf.json
+wsgi/reportmap/mailgun_conf.json
+wsgi/reportmap/recaptcha_conf.json
