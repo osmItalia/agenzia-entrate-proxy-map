@@ -1,0 +1,2 @@
+{"type": "FeatureCollection","features": [], "timestamp": "2014-07-02T11:52:17.452116+00:00"}
+{"type": "FeatureCollection","features": [{ "type": "Feature", "id":"1", "properties": { "text": "primo"   }, "geometry": { "type": "Point", "coordinates": [11.1134111881256, 46.062586101052894] } }], "timestamp": "2014-07-02T11:52:18.452116+00:00"}
