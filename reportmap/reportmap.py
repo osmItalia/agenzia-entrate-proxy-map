@@ -109,49 +109,87 @@ SERVERS = {'a': 'ts0',
            'c': 'ts2'
            }
 
-
-def convert_x(x):
-    # geopoi_x = round(1.19432301*osm_x-156542.198409392)
-    return int(round(1.19432301*int(x)-156542.198409392))
+BASE_OFFSET_X = 156542.198409392
+BASE_OFFSET_Y = 156543.588665743
 
 
-def convert_y(y):
-    # geopoi_y = round(-1.1943348744*osm_y+156542.588665743)
-    #
-    # Minus sign is needed because it is a tms
-    # See:
-    # https://wiki.openstreetmap.org/wiki/TMS#The_Y_coordinate_flipped
-    # also, leaflet has a specific option for TMS:
-    # http://leafletjs.com/reference.html#tilelayer-options
-    return int(-round(-1.1943348744*int(y)+156543.588665743))
+def convert_zoom(z):
+    # ZOOM = {18: 128,
+    #         17: 256,
+    #         16: 512,
+    #         15: 1024
+    #         }
+    return pow(2, -z+25)
 
 
-def unconvert_y(y):
-    # osm_y = round((geopoy_y-156542.588665743)/(-1.1943348744))
-    return int(round((-int(y)-156542.588665743)/(-1.1943348744)))
+def convert_x_with_zoom(z):
+
+    def convert_x(x):
+
+        # BASE_OFFSET_X * float(convert_zoom(18))/float(convert_zoom(z))
+        offset_x = BASE_OFFSET_X * 128./float(convert_zoom(z))
+
+        # with zoom 18, i.e 128
+        # geopoi_x = round(1.19432301*osm_x-156542.198409392)
+        return int(round(1.19432301*int(x)-offset_x))
+
+    return convert_x
 
 
-def get_parameters(xtile, ytile):
+def convert_y_with_zoom(z):
+
+    def convert_y(y):
+
+        # BASE_OFFSET_Y * float(convert_zoom(18))/float(convert_zoom(z))
+        offset_y = BASE_OFFSET_Y * 128./float(convert_zoom(z))
+
+        # geopoi_y = round(-1.1943348744*osm_y+156542.588665743)
+        #
+        # Minus sign is needed because it is a tms
+        # See:
+        # https://wiki.openstreetmap.org/wiki/TMS#The_Y_coordinate_flipped
+        # also, leaflet has a specific option for TMS:
+        # http://leafletjs.com/reference.html#tilelayer-options
+        return int(-round(-1.1943348744*int(y)+offset_y))
+
+    return convert_y
+
+
+def unconvert_y_with_zoom(z):
+
+    def unconvert_y(y):
+
+        # BASE_OFFSET_Y * float(convert_zoom(18))/float(convert_zoom(z))
+        offset_y = BASE_OFFSET_Y * 128./float(convert_zoom(z))
+
+        # osm_y = round((geopoy_y-156542.588665743)/(-1.1943348744))
+        return int(round((-int(y)-offset_y)/(-1.1943348744)))
+
+    return unconvert_y
+
+
+def get_parameters(xtile, ytile, zoom):
 
     xtile = int(xtile)
     ytile = int(ytile)
 
-    xdiff = xtile - convert_x(xtile)
+    zoom = int(zoom)
+
+    xdiff = xtile - convert_x_with_zoom(zoom)(xtile)
 
     # tms has a negative sign, so we convert our central tile get the
     # converted number (which is negative), make it positive and calculate
     # back the tms tile value.
-    tms_ytile = unconvert_y(-convert_y(ytile))
+    tms_ytile = unconvert_y_with_zoom(zoom)(-convert_y_with_zoom(zoom)(ytile))
 
     # as above
-    ydiff = tms_ytile - convert_y(tms_ytile)
+    ydiff = tms_ytile - convert_y_with_zoom(zoom)(tms_ytile)
 
     def convert_parameters(s, z, x, y):
+
         s = SERVERS[s]
 
-        z = '128'
-
-        print xtile, ytile, s, z, x, y
+        z = convert_zoom(int(z))
 
         #  old formula, works for Trento
         # x = int(x) - 129498
@@ -450,11 +488,9 @@ def redirecting_proxy(xtile, ytile, s, z, x, y):
     # http://b.tile.osm.org/18/139168/93186.png
     # http://ts2.geopoi.it/geopoiAPI/tms/base.php?tx=9670&ty=45248&vd=128
 
-    s, z, x, y = get_parameters(xtile, ytile)(s, z, x, y)
+    s, z, x, y = get_parameters(xtile, ytile, z)(s, z, x, y)
 
     url = GEOPOI_SERVER_BASEURL.format(s=s, z=z, x=x, y=y)
-
-    print url
 
     return redirect(url)
 
